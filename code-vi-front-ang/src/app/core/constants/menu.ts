@@ -18,7 +18,7 @@ export class Menu {
       ],
     },
     {
-      group: 'Admin - Only',
+      group: 'Dashboard',
       separator: true,
       role: ['admin'],
       authStatus: 'authenticated',
