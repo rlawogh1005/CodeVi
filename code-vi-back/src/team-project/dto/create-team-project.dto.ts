@@ -21,5 +21,5 @@ export class CreateTeamProjectAnalysisDto {
   // @IsObject()
   // @ValidateNested()
   // @Type(() => AstNodeDto)
-  astData: { nodes: AstNodeDto[] };
+  astData?: { nodes: AstNodeDto[] };
 }
