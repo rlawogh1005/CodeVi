@@ -1,0 +1,13 @@
+// dashboard-details.component.scss
+
+// Cytoscape container needs explicit height/width in strict mode sometimes,
+// but flex-grow in Tailwind should handle it. Ensuring it has a base size.
+#cy {
+    min-height: 400px;
+    display: block;
+}
+
+#chart {
+    width: 100%;
+    min-height: 300px;
+}

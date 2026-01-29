@@ -1,0 +1,63 @@
+version: "3.8"
+
+networks:
+  codevi-backend-net:
+    driver: bridge
+  shared-net:
+    external: true
+    name: shared-net
+
+services:
+  backend:
+    build: .
+    container_name: codevi-backend
+    environment:
+      - PORT=13000
+      - SERVER_HOST=${SERVER_HOST}
+      - SONAR_TOKEN=${SONAR_TOKEN}
+      - NODE_ENV=production
+      - DATABASE_HOST=codevi-db
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=codevi
+      - DATABASE_USERNAME=jaehokim
+      - DATABASE_PASSWORD=${USER_DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - TZ=Asia/Seoul
+      - AUTH_BEARER_TOKEN=${BACKEND_AUTH_TOKEN} 
+    networks:
+      - codevi-backend-net
+      - shared-net
+    ports:
+      - "13000:13000" # Host:Container (내부 3000 가정)
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: codevi-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=codevi
+      - MYSQL_USER=jaehokim
+      - MYSQL_PASSWORD=${USER_DB_PASSWORD}
+    # [핵심 수정] 외부(호스트 PC)에서 접근 가능하도록 포트 개방
+    ports:
+      - "13306:13306"
+    networks:
+      - codevi-backend-net
+      # 만약 Jenkins나 SonarQube에서 DB에 직접 접근할 일이 있다면 shared-net도 추가 가능
+      - shared-net 
+    volumes:
+      - codevi-mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  codevi-mysql-data:

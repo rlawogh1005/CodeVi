@@ -1,0 +1,148 @@
+# ============================================
+# Node.js Dependencies
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Build Outputs
+# ============================================
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+
+# ============================================
+# Environment Variables
+# ============================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+code-vi-back/.env
+code-vi-front-ang/.env
+
+# ============================================
+# NestJS Specific
+# ============================================
+code-vi-back/dist/
+code-vi-back/.env
+code-vi-back/coverage/
+code-vi-back/.nyc_output/
+
+# ============================================
+# Angular Specific
+# ============================================
+code-vi-front-ang/dist/
+code-vi-front-ang/.angular/
+code-vi-front-ang/coverage/
+code-vi-front-ang/tmp/
+code-vi-front-ang/out-tsc/
+code-vi-front-ang/bazel-out/
+code-vi-front-ang/.sass-cache/
+code-vi-front-ang/connect.lock
+code-vi-front-ang/libpeerconnection.log
+code-vi-front-ang/testem.log
+code-vi-front-ang/src/assets/icons/techstacks/
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ============================================
+# IDE / Editor Files
+# ============================================
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.DS_Store
+
+# ============================================
+# OS Files
+# ============================================
+Thumbs.db
+Desktop.ini
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# ============================================
+# Docker
+# ============================================
+.docker/
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Package Manager Lock Files (선택적)
+# ============================================
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================
+# SSL Certificates
+# ============================================
+*.pem
+*.key
+*.crt
+*.cer
+
+# ============================================
+# Database
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ============================================
+# Misc
+# ============================================
+.eslintcache
+*.map

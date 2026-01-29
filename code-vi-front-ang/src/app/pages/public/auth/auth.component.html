@@ -1,0 +1,30 @@
+<div class="flex h-screen w-screen">
+  <div class="auth-bg hidden flex-1 items-center justify-center bg-primary bg-cover lg:flex">
+    <div class="max-w-2xl space-y-4 p-8 text-center text-white">
+      <img src="./assets/images/sign-up.png" alt="dashboard widget" />
+      <h1 class="text-4xl font-bold">WELCOME ABOARD</h1>
+      <p class="text-xs font-medium">
+        환영합니다! 
+        <br>
+        <span class="cursor-pointer font-medium text-yellow-400">METAVERSE</span>에서 웹, 3D 등 다양한 기술을 배우고 새로운 지식을 쌓아보세요.
+        <br>
+        다양한 온라인 강의와 자료를 통해 최신 기술을 학습하고 실력을 향상시킬 수 있습니다.
+        <br><br>
+        <span class="cursor-pointer font-medium text-yellow-400">METAVERSE</span>와 함께 미래의 기술 전문가로 성장해 보세요!
+      </p>
+    </div>
+  </div>
+  <div class="flex flex-1 items-center justify-center bg-background">
+    <div class="max-w-md overflow-y-auto px-4 sm:w-[500px]">
+      <!-- logo -->
+      <div class="flex items-center justify-center">
+        <a class="rounded bg-primary p-2">
+          <svg-icon [svgClass]="'h-6 w-6'" src="assets/icons/metaverse_logo_white.svg"> </svg-icon>
+        </a>
+        <b class="text-md pl-3 font-bold text-foreground"> METAVERSE </b>
+      </div>
+      <!-- Route -->
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

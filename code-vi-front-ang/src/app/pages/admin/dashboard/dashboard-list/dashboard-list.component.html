@@ -1,0 +1,120 @@
+<div>
+    <!-- Table Component -->
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+        <div dashboard-list-table class="md:col-span-2 xl:col-span-4">
+
+            <!-- Header -->
+            <div class="mb-4 flex justify-between">
+                <div class="inline-block">
+                    <h3 class="font-semibold text-foreground">Dashboard</h3>
+                    <div class="space-x-1 text-xs font-medium text-muted-foreground">
+                        <span class="hover:text-primary">Dashboard - Overview</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Card -->
+            <div class="flex flex-col rounded-lg bg-white px-8 py-8 shadow-sm">
+
+                <!-- Description / Controls -->
+                <div class="mb-4 flex items-center justify-between">
+                    <div class="flex-col items-center">
+                        <h3 class="text-md font-bold text-foreground">Project List</h3>
+                        <span class="text-xs text-muted-foreground"> Team Projects Overview </span>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <button (click)="onSelectTab('team')" [class.bg-primary]="selectedTab === 'team'"
+                            [class.text-primary-foreground]="selectedTab === 'team'"
+                            class="px-3 py-1 rounded-md text-sm font-medium transition-colors hover:bg-muted">Team</button>
+                        <button (click)="onSelectTab('course')" [class.bg-primary]="selectedTab === 'course'"
+                            [class.text-primary-foreground]="selectedTab === 'course'"
+                            class="px-3 py-1 rounded-md text-sm font-medium transition-colors hover:bg-muted">Course</button>
+                        <button (click)="onSelectTab('individual')" [class.bg-primary]="selectedTab === 'individual'"
+                            [class.text-primary-foreground]="selectedTab === 'individual'"
+                            class="px-3 py-1 rounded-md text-sm font-medium transition-colors hover:bg-muted">Individual</button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="relative overflow-x-auto">
+                    <table class="w-full table-fixed">
+                        <thead class="text-sm uppercase text-muted-foreground border-b border-border">
+                            <tr>
+                                <th *ngFor="let col of currentColumns"
+                                    class="py-3 text-center text-foreground font-bold" [style.width]="col.width">
+                                    {{ col.label }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of items"
+                                class="border-b border-dashed border-border hover:bg-card transition-colors">
+                                <td *ngFor="let col of currentColumns" class="py-3 text-center">
+                                    <div class="flex h-full w-full items-center justify-center">
+                                        <ng-container [ngSwitch]="col.key">
+                                            <span *ngSwitchCase="'date'"
+                                                class="text-sm font-semibold text-muted-foreground">
+                                                {{ item[col.key] === '-' ? '-' : (item[col.key] | date:'yyyy-MM-dd
+                                                HH:mm')
+                                                }}
+                                            </span>
+
+                                            <div *ngSwitchCase="'action'">
+                                                <app-button [tone]="'primary'" [size]="'small'"
+                                                    (click)="onAction(item)">
+                                                    상세보기
+                                                </app-button>
+                                            </div>
+
+                                            <span *ngSwitchDefault class="text-sm font-semibold text-muted-foreground">
+                                                {{ item[col.key] }}
+                                            </span>
+                                        </ng-container>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div *ngIf="isLoading" class="py-10 text-center text-muted-foreground">
+                        데이터를 불러오는 중입니다...
+                    </div>
+                    <div *ngIf="!isLoading && error" class="py-10 text-center text-red-500 font-semibold">
+                        {{ error }}
+                    </div>
+                    <div *ngIf="!isLoading && !error && items.length === 0"
+                        class="py-10 text-center text-muted-foreground">
+                        표시할 데이터가 없습니다.
+                    </div>
+
+                    <!-- Page Navigator -->
+                    <div
+                        class="flex flex-wrap items-center justify-center gap-2 py-3 px-5 text-xs text-muted-foreground">
+                        <div class="inline-flex items-center gap-1">
+                            <button (click)="changePage(currentPage - 1)"
+                                class="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-sm disabled:opacity-50"
+                                [disabled]="currentPage === 1">
+                                <svg-icon src="./assets/icons/heroicons/outline/arrow-long-left.svg"
+                                    [svgClass]="'h-4 w-4'"></svg-icon>
+                            </button>
+
+                            <button *ngFor="let page of totalPages" (click)="changePage(page)"
+                                class="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-sm hover:bg-muted-foreground/10"
+                                [ngClass]="{'bg-muted-foreground/10': currentPage === page}">
+                                {{ page }}
+                            </button>
+
+                            <button (click)="changePage(currentPage + 1)"
+                                class="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-sm disabled:opacity-50"
+                                [disabled]="currentPage === totalPages.length">
+                                <svg-icon src="./assets/icons/heroicons/outline/arrow-long-right.svg"
+                                    [svgClass]="'h-4 w-4'"></svg-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

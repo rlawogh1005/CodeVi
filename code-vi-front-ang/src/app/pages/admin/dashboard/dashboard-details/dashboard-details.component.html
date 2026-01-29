@@ -1,0 +1,45 @@
+<div class="p-6 space-y-6 bg-gray-50 min-h-screen">
+    <!-- Loading/Error States -->
+    <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+        <div class="text-xl text-muted-foreground">Loading...</div>
+    </div>
+    <div *ngIf="error" class="flex justify-center items-center h-64">
+        <div class="text-xl text-red-500 font-semibold">{{ error }}</div>
+    </div>
+
+    <!-- Main Content -->
+    <div *ngIf="!isLoading && !error && projectData" class="space-y-6">
+
+        <!-- Header / Project Info -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h1 class="text-2xl font-bold mb-4">{{ projectData!.teamName }} - Dashboard Details</h1>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div><span class="font-semibold text-gray-500">Build Number:</span> {{
+                    projectData!.codeAnalysis?.buildNumber }}</div>
+                <div><span class="font-semibold text-gray-500">Date:</span> {{ projectData!.codeAnalysis?.createdAt |
+                    date:'medium' }}
+                </div>
+                <div><span class="font-semibold text-gray-500">Members:</span> {{ projectData!.members.join(', ') }}
+                </div>
+                <div><span class="font-semibold text-gray-500">LOC:</span> {{ projectData!.codeAnalysis?.ncloc }}</div>
+            </div>
+        </div>
+
+        <!-- Top Section: Build History (Bar Chart) -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4 border-b pb-2">Build History Timeline</h2>
+            <div #chart id="chart" class="w-full h-80"></div>
+        </div>
+
+        <div class="p-6 space-y-6 bg-gray-50 min-h-screen">
+            <div *ngIf="isLoading" class="flex justify-center items-center h-64">Loading...</div>
+
+            <div *ngIf="!isLoading && projectData" class="space-y-6">
+                <div class="bg-white rounded-lg shadow p-6 flex flex-col h-[650px]">
+                    <h2 class="text-lg font-semibold mb-4 border-b pb-2">Software Geography (D3 + PixiJS)</h2>
+                    <div #cyContainer class="flex-grow w-full border rounded bg-white overflow-hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
