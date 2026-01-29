@@ -20,7 +20,7 @@ export class TeamProjectService {
     private readonly teamProjectRepository: Repository<TeamProject>,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async createJenkinsNotification(dto: CreateTeamProjectAnalysisDto) {
     // 1단계: 핵심 데이터 저장 및 트랜잭션 종료 (최대한 빠르게)
@@ -124,23 +124,23 @@ export class TeamProjectService {
       .addSelect(['project.id', 'project.teamName', 'project.JenkinsJobName'])
       .leftJoin('project.users', 'user')
       .addSelect(['user.username'])
-      // AST Data ID 연결 (생성 시간이 1초 이내인 데이터)
-      .leftJoinAndMapOne(
-        'analysis.astDataId',
+      // AST Data ID 연결 (생성 시간이 1초 이내인 데이터) - astContent는 제외하고 ID만 가져옴
+      .leftJoin(
         AstData,
         'astData',
         'astData.teamProjectId = project.id AND ABS(TIMESTAMPDIFF(SECOND, analysis.createdAt, astData.createdAt)) <= 1',
       )
+      .addSelect('astData.id', 'astDataId')
       .orderBy('analysis.createdAt', 'DESC')
-      .getMany();
+      .getRawAndEntities();
 
-    return history.map((analysis) => {
+    return history.entities.map((analysis, index) => {
       const project = analysis.teamProject;
       // DTO 매핑을 위해 project 객체에 latestAnalysis 속성 추가
       (project as any).latestAnalysis = analysis;
-      // MapOne으로 매핑된 AstData 객체에서 ID 추출
-      const mappedAstData = (analysis as any).astDataId;
-      (analysis as any).astDataId = mappedAstData ? mappedAstData.id : null;
+      // Raw 결과에서 astDataId 추출
+      const rawRow = history.raw[index];
+      (analysis as any).astDataId = rawRow?.astDataId ?? null;
 
       return new TeamProjectResponseDto(project);
     });
