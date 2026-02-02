@@ -6,6 +6,7 @@ import { TypeOrmConfig } from './configs/typeorm.config';
 import { ConfigModule } from '@nestjs/config';
 import { TeamProjectModule } from './team-project/team-project.module';
 import { CodeAnalysisModule } from './code-analysis/code-analysis.module';
+import { MetricModule } from './metric/metric.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CodeAnalysisModule } from './code-analysis/code-analysis.module';
     UsersModule,
     TeamProjectModule,
     CodeAnalysisModule,
+    MetricModule,
   ],
 })
 export class AppModule { }
