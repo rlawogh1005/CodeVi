@@ -1,0 +1,365 @@
+{
+    "astData": {
+        "nodes": [
+            {
+                "type": "DIRECTORY",
+                "name": "/app/temp_1769680036020_a0lz9",
+                "children": [
+                    {
+                        "type": "DIRECTORY",
+                        "name": "/app/temp_1769680036020_a0lz9/docs",
+                        "children": [
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/docs/_static",
+                                "children": [
+                                    {
+                                        "type": "DIRECTORY",
+                                        "name": "/app/temp_1769680036020_a0lz9/docs/_static/css",
+                                        "children": []
+                                    },
+                                    {
+                                        "type": "DIRECTORY",
+                                        "name": "/app/temp_1769680036020_a0lz9/docs/_static/img",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/docs/common",
+                                "children": []
+                            },
+                            {
+                                "type": "FILE",
+                                "name": "conf.py",
+                                "children": [
+                                    {
+                                        "type": "METHOD",
+                                        "name": "setup",
+                                        "range": {
+                                            "start": {
+                                                "line": 119,
+                                                "col": 0
+                                            },
+                                            "end": {
+                                                "line": 120,
+                                                "col": 47
+                                            }
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/docs/guide",
+                                "children": []
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/docs/misc",
+                                "children": []
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/docs/modules",
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "type": "DIRECTORY",
+                        "name": "/app/temp_1769680036020_a0lz9/scripts",
+                        "children": []
+                    },
+                    {
+                        "type": "FILE",
+                        "name": "setup.py",
+                        "children": []
+                    },
+                    {
+                        "type": "DIRECTORY",
+                        "name": "/app/temp_1769680036020_a0lz9/stable_baselines3",
+                        "children": [
+                            {
+                                "type": "FILE",
+                                "name": "__init__.py",
+                                "children": [
+                                    {
+                                        "type": "METHOD",
+                                        "name": "HER",
+                                        "range": {
+                                            "start": {
+                                                "line": 18,
+                                                "col": 0
+                                            },
+                                            "end": {
+                                                "line": 22,
+                                                "col": 5
+                                            }
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/stable_baselines3/a2c",
+                                "children": [
+                                    {
+                                        "type": "FILE",
+                                        "name": "__init__.py",
+                                        "children": []
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "a2c.py",
+                                        "children": [
+                                            {
+                                                "type": "CLASS",
+                                                "name": "A2C",
+                                                "range": {
+                                                    "start": {
+                                                        "line": 16,
+                                                        "col": 0
+                                                    },
+                                                    "end": {
+                                                        "line": 208,
+                                                        "col": 9
+                                                    }
+                                                },
+                                                "children": [
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "__init__",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 66,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 130,
+                                                                "col": 31
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "train",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 132,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 190,
+                                                                "col": 86
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "learn",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 192,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 208,
+                                                                "col": 9
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "policies.py",
+                                        "children": []
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "DIRECTORY",
+                                "name": "/app/temp_1769680036020_a0lz9/stable_baselines3/common",
+                                "children": [
+                                    {
+                                        "type": "FILE",
+                                        "name": "__init__.py",
+                                        "children": []
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "atari_wrappers.py",
+                                        "children": [
+                                            {
+                                                "type": "CLASS",
+                                                "name": "StickyActionEnv",
+                                                "range": {
+                                                    "start": {
+                                                        "line": 17,
+                                                        "col": 0
+                                                    },
+                                                    "end": {
+                                                        "line": 40,
+                                                        "col": 49
+                                                    }
+                                                },
+                                                "children": [
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "__init__",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 28,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 31,
+                                                                "col": 93
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "reset",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 33,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 35,
+                                                                "col": 39
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "step",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 37,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 40,
+                                                                "col": 49
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "base_class.py",
+                                        "children": [],
+                                        "error": "Invalid argument"
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "buffers.py",
+                                        "children": [],
+                                        "error": "Invalid argument"
+                                    },
+                                    {
+                                        "type": "FILE",
+                                        "name": "callbacks.py",
+                                        "children": [
+                                            {
+                                                "type": "CLASS",
+                                                "name": "BaseCallback",
+                                                "range": {
+                                                    "start": {
+                                                        "line": 31,
+                                                        "col": 0
+                                                    },
+                                                    "end": {
+                                                        "line": 144,
+                                                        "col": 12
+                                                    }
+                                                },
+                                                "children": [
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "__init__",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 42,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 53,
+                                                                "col": 55
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    },
+                                                    {
+                                                        "type": "METHOD",
+                                                        "name": "on_step",
+                                                        "range": {
+                                                            "start": {
+                                                                "line": 103,
+                                                                "col": 4
+                                                            },
+                                                            "end": {
+                                                                "line": 115,
+                                                                "col": 30
+                                                            }
+                                                        },
+                                                        "children": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "DIRECTORY",
+                        "name": "/app/temp_1769680036020_a0lz9/tests",
+                        "children": [
+                            {
+                                "type": "FILE",
+                                "name": "test_buffers.py",
+                                "children": [
+                                    {
+                                        "type": "CLASS",
+                                        "name": "DummyEnv",
+                                        "range": {
+                                            "start": {
+                                                "line": 16,
+                                                "col": 0
+                                            },
+                                            "end": {
+                                                "line": 41,
+                                                "col": 53
+                                            }
+                                        },
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "timestamp": "2026-01-29T09:47:16.568Z"
+}
