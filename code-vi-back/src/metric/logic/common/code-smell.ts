@@ -18,8 +18,10 @@ import {
     FeatureEnvyResult,
     DataClumpResult,
     SwitchStatementResult,
-    DEFAULT_THRESHOLDS,
 } from '../../types/types';
+import {
+    DEFAULT_THRESHOLDS,
+} from '../../types/threshold';
 import {
     extractMethods,
     extractFields,
