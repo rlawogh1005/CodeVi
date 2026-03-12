@@ -31,9 +31,9 @@ async function bootstrap() {
   const httpAdapterHost = app.get(HttpAdapterHost);
   app.useGlobalFilters(new GlobalExceptionFilter(httpAdapterHost));
 
-  // 최대 요청 크기 설정 (예: 10MB)
-  app.use(bodyParser.json({ limit: '100mb' }));
-  app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+  // 최대 요청 크기 설정 (예: 1000MB)
+  app.use(bodyParser.json({ limit: '1000mb' }));
+  app.use(bodyParser.urlencoded({ limit: '1000mb', extended: true }));
 
   const config = new DocumentBuilder()
     .setTitle('MP Project API')
