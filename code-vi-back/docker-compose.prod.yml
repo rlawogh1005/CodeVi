@@ -7,58 +7,89 @@ networks:
     external: true
     name: shared-net
 
+# 공통 설정 (YAML anchor)
+x-common-backend: &common-backend
+  networks:
+    - codevi-backend-net
+    - shared-net
+  depends_on:
+    - db
+  restart: always
+
+x-common-env: &common-env
+  SERVER_HOST: ${SERVER_HOST}
+  SONAR_TOKEN: ${SONAR_TOKEN}
+  NODE_ENV: production
+  DATABASE_HOST: ${DATABASE_HOST:-codevi-db}
+  DATABASE_PORT: 3306
+  DATABASE_NAME: ${DATABASE_NAME:-codevi}
+  DATABASE_USERNAME: ${DATABASE_USERNAME:-jaehokim}
+  DATABASE_PASSWORD: ${USER_DB_PASSWORD}
+  JWT_SECRET: ${JWT_SECRET}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+  GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+  TZ: Asia/Seoul
+  AUTH_BEARER_TOKEN: ${BACKEND_AUTH_TOKEN}
+  DEPLOY_FRONTEND_URL1: ${DEPLOY_FRONTEND_URL1}
+  DEPLOY_FRONTEND_URL2: ${DEPLOY_FRONTEND_URL2}
+  DEPLOY_FRONTEND_URL3: ${DEPLOY_FRONTEND_URL3}
+  DEPLOY_FRONTEND_URL4: ${DEPLOY_FRONTEND_URL4}
+  DEPLOY_FRONTEND_URL5: ${DEPLOY_FRONTEND_URL5}
+  DEPLOY_FRONTEND_URL6: ${DEPLOY_FRONTEND_URL6}
+
 services:
+  # 기존 백엔드 (포트 13000)
   backend:
     build: .
     container_name: codevi-backend
+    <<: *common-backend
     environment:
-      - PORT=13000
-      - SERVER_HOST=${SERVER_HOST}
-      - SONAR_TOKEN=${SONAR_TOKEN}
-      - NODE_ENV=production
-      - DATABASE_HOST=codevi-db
-      - DATABASE_PORT=3306
-      - DATABASE_NAME=codevi
-      - DATABASE_USERNAME=jaehokim
-      - DATABASE_PASSWORD=${USER_DB_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - TZ=Asia/Seoul
-      - AUTH_BEARER_TOKEN=${BACKEND_AUTH_TOKEN} 
-      - DEPLOY_FRONTEND_URL1=${DEPLOY_FRONTEND_URL1}
-      - DEPLOY_FRONTEND_URL2=${DEPLOY_FRONTEND_URL2}
-      - DEPLOY_FRONTEND_URL3=${DEPLOY_FRONTEND_URL3}
-      - DEPLOY_FRONTEND_URL4=${DEPLOY_FRONTEND_URL4}
-      - DEPLOY_FRONTEND_URL5=${DEPLOY_FRONTEND_URL5}
-      - DEPLOY_FRONTEND_URL6=${DEPLOY_FRONTEND_URL6}
-    networks:
-      - codevi-backend-net
-      - shared-net
+      <<: *common-env
+      PORT: "13000"
     ports:
-      - "13000:13000" # Host:Container (내부 3000 가정)
-    depends_on:
-      - db
-    restart: always
+      - "13000:13000"
 
+  # V1: Relational AST (포트 13001) - Directory→File→Class→Function 정규화 저장
+  backend-relational:
+    build: .
+    container_name: codevi-backend-relational
+    <<: *common-backend
+    environment:
+      <<: *common-env
+      ENTRY_FILE: main-relational
+      RELATIONAL_PORT: "13001"
+    ports:
+      - "13001:13001"
+
+  # V2: JSON AST (포트 13002) - AST를 @Column('json')에 통째 저장
+  backend-json:
+    build: .
+    container_name: codevi-backend-json
+    <<: *common-backend
+    environment:
+      <<: *common-env
+      ENTRY_FILE: main-json
+      JSON_PORT: "13002"
+    ports:
+      - "13002:13002"
+
+  # MySQL Database
   db:
     image: mysql:8.0
     container_name: codevi-db
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=codevi
-      - MYSQL_USER=jaehokim
+      - MYSQL_DATABASE=${DATABASE_NAME:-codevi}
+      - MYSQL_USER=${DATABASE_USERNAME:-jaehokim}
       - MYSQL_PASSWORD=${USER_DB_PASSWORD}
-    # [핵심 수정] 외부(호스트 PC)에서 접근 가능하도록 포트 개방
     ports:
-      - "13306:13306"
+      - "13306:3306"
     networks:
       - codevi-backend-net
-      # 만약 Jenkins나 SonarQube에서 DB에 직접 접근할 일이 있다면 shared-net도 추가 가능
-      - shared-net 
+      - shared-net
     volumes:
       - codevi-mysql-data:/var/lib/mysql
     command:

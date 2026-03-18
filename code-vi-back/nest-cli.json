@@ -4,5 +4,25 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true
+  },
+  "projects": {
+    "relational": {
+      "type": "application",
+      "root": ".",
+      "entryFile": "main-relational",
+      "sourceRoot": "src",
+      "compilerOptions": {
+        "tsConfigPath": "tsconfig.build.json"
+      }
+    },
+    "json-store": {
+      "type": "application",
+      "root": ".",
+      "entryFile": "main-json",
+      "sourceRoot": "src",
+      "compilerOptions": {
+        "tsConfigPath": "tsconfig.build.json"
+      }
+    }
   }
 }
