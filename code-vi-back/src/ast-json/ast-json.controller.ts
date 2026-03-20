@@ -9,8 +9,8 @@ export class AstJsonController {
   constructor(private readonly astJsonService: AstJsonService) { }
 
   @Post()
-  @ApiOperation({ summary: 'AST 데이터를 JSON 통째로 저장' })
-  @ApiResponse({ status: 201, description: 'AST 데이터가 JSON으로 저장됨' })
+  @ApiOperation({ summary: '[LEGACY - DISABLED] AST 데이터를 JSON 통째로 저장 (비활성화됨)' })
+  @ApiResponse({ status: 200, description: 'JSON 저장이 비활성화되었습니다. /api/ast-data/relational 사용 안내' })
   async saveAstData(@Body() dto: CreateJsonAstDto) {
     return this.astJsonService.saveAstData(dto);
   }

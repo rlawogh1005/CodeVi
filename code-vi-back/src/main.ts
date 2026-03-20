@@ -70,8 +70,11 @@ async function bootstrap() {
     prefix: '/',
   });
 
-  await app.listen(process.env.SERVER_PORT || 13000, process.env.SERVER_HOST || '0.0.0.0');
-  Logger.log(`CI/CD Implementation Complete / CI/CD Seperate`);
-  Logger.log(`Application Running on Port Backend CI/CD Container: ${process.env.SERVER_PORT}`)
+  const port = process.env.SERVER_PORT || 13000;
+  await app.listen(port, process.env.SERVER_HOST || '0.0.0.0');
+  Logger.log(`🔗 [CodeVi Unified Server] Running on port ${port}`);
+  Logger.log(`📦 Primary storage: Relational AST (Directory→File→Class→Function)`);
+  Logger.log(`📄 Swagger: http://localhost:${port}/api`);
+  // Legacy: JSON AST 저장은 비활성화됨. 추후 HDD 아키텍처로 분리 예정.
 }
 bootstrap();
