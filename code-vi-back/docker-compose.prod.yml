@@ -40,40 +40,46 @@ x-common-env: &common-env
   DEPLOY_FRONTEND_URL6: ${DEPLOY_FRONTEND_URL6}
 
 services:
-  # 기존 백엔드 (포트 13000)
+  # 통합 백엔드 (포트 13000) - Relational AST (Directory→File→Class→Function) 저장
   backend:
     build: .
     container_name: codevi-backend
     <<: *common-backend
     environment:
       <<: *common-env
-      PORT: "13000"
+      SERVER_PORT: "13000"
     ports:
       - "13000:13000"
 
-  # V1: Relational AST (포트 13001) - Directory→File→Class→Function 정규화 저장
-  backend-relational:
-    build: .
-    container_name: codevi-backend-relational
-    <<: *common-backend
-    environment:
-      <<: *common-env
-      ENTRY_FILE: main-relational
-      RELATIONAL_PORT: "13001"
-    ports:
-      - "13001:13001"
-
-  # V2: JSON AST (포트 13002) - AST를 @Column('json')에 통째 저장
-  backend-json:
-    build: .
-    container_name: codevi-backend-json
-    <<: *common-backend
-    environment:
-      <<: *common-env
-      ENTRY_FILE: main-json
-      JSON_PORT: "13002"
-    ports:
-      - "13002:13002"
+  # ======================================================================
+  # [LEGACY] 아래 서비스들은 비활성화됨.
+  # 추후 HDD 별도 저장 아키텍처로 전환 시 재활용 예정.
+  # 비활성화 일자: 2026-03-20
+  # ======================================================================
+  #
+  # # V1: Relational AST (포트 13001) - Directory→File→Class→Function 정규화 저장
+  # backend-relational:
+  #   build: .
+  #   container_name: codevi-backend-relational
+  #   <<: *common-backend
+  #   environment:
+  #     <<: *common-env
+  #     ENTRY_FILE: main-relational
+  #     RELATIONAL_PORT: "13001"
+  #   ports:
+  #     - "13001:13001"
+  #
+  # # V2: JSON AST (포트 13002) - AST를 @Column('json')에 통째 저장
+  # backend-json:
+  #   build: .
+  #   container_name: codevi-backend-json
+  #   <<: *common-backend
+  #   environment:
+  #     <<: *common-env
+  #     ENTRY_FILE: main-json
+  #     JSON_PORT: "13002"
+  #   ports:
+  #     - "13002:13002"
 
   # MySQL Database
   db:
