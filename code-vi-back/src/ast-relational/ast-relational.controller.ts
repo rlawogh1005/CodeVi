@@ -26,4 +26,22 @@ export class AstRelationalController {
   async getSnapshot(@Param('snapshotId', ParseIntPipe) snapshotId: number) {
     return await this.astRelationalService.getSnapshotById(snapshotId);
   }
+
+  @Get('benchmark/natural-join/:snapshotId')
+  @ApiOperation({ summary: '벤치마크: Natural JOIN 방식으로 AST 스냅샷 조회' })
+  async benchmarkNaturalJoin(@Param('snapshotId', ParseIntPipe) snapshotId: number) {
+    const start = performance.now();
+    const data = await this.astRelationalService.getSnapshotByNaturalJoin(snapshotId);
+    const serverQueryMs = +(performance.now() - start).toFixed(4);
+    return { method: 'natural-join', serverQueryMs, data };
+  }
+
+  @Get('benchmark/nested/:snapshotId')
+  @ApiOperation({ summary: '벤치마크: Nested SQL 방식으로 AST 스냅샷 조회' })
+  async benchmarkNested(@Param('snapshotId', ParseIntPipe) snapshotId: number) {
+    const start = performance.now();
+    const data = await this.astRelationalService.getSnapshotByNested(snapshotId);
+    const serverQueryMs = +(performance.now() - start).toFixed(4);
+    return { method: 'nested', serverQueryMs, data };
+  }
 }

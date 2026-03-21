@@ -1,7 +1,6 @@
 import { IsObject, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateCodeAnalysisDto } from '../../code-analysis/dto/create-code-analysis.dto';
-import { AstNodeDto } from 'src/ast-data/dto/ast-node.dto';
 
 export class CreateTeamProjectAnalysisDto {
   @IsString()
@@ -18,8 +17,6 @@ export class CreateTeamProjectAnalysisDto {
   @Type(() => CreateCodeAnalysisDto)
   analysis: CreateCodeAnalysisDto;
 
-  // @IsObject()
-  // @ValidateNested()
-  // @Type(() => AstNodeDto)
-  astData?: { nodes: AstNodeDto[] };
+  // [LEGACY] AST 데이터는 이제 /api/ast-data/relational 엔드포인트를 통해 별도 저장
+  astData?: any;
 }

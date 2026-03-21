@@ -200,6 +200,190 @@ export class AstRelationalService {
   }
 
   /**
+   * JOIN 방식: QueryBuilder의 leftJoinAndSelect를 체이닝하여
+   * 하나의 SQL로 전체 트리를 조회합니다.
+   */
+  async getSnapshotByNaturalJoin(snapshotId: number): Promise<AstSnapshot> {
+    const snapshot = await this.snapshotRepo
+      .createQueryBuilder('snapshot')
+      .leftJoinAndSelect('snapshot.directories', 'dir')
+      .leftJoinAndSelect('dir.files', 'file')
+      .leftJoinAndSelect('file.classes', 'cls')
+      .leftJoinAndSelect('cls.methods', 'method')
+      .leftJoinAndSelect('file.fileFunctions', 'fileFn')
+      .where('snapshot.id = :id', { id: snapshotId })
+      .getOne();
+
+    if (!snapshot) {
+      throw new NotFoundException(`Snapshot not found: ${snapshotId}`);
+    }
+
+    return snapshot;
+  }
+
+  /**
+   * Nested SQL (서브쿼리) 방식: 각 계층을 개별 쿼리로 조회하고,
+   * WHERE 절에 서브쿼리를 사용하여 상위 엔티티의 ID를 동적으로 참조합니다.
+   * 결과는 코드에서 조립합니다.
+   */
+  async getSnapshotByNested(snapshotId: number): Promise<AstSnapshot> {
+    // 1) 스냅샷 단건 조회
+    const snapshot = await this.snapshotRepo
+      .createQueryBuilder('snapshot')
+      .where('snapshot.id = :id', { id: snapshotId })
+      .getOne();
+
+    if (!snapshot) {
+      throw new NotFoundException(`Snapshot not found: ${snapshotId}`);
+    }
+
+    // 2) 디렉토리 조회 — 서브쿼리로 snapshotId 매칭
+    const directories = await this.directoryRepo
+      .createQueryBuilder('dir')
+      .where(
+        'dir.snapshotId IN (' +
+        this.snapshotRepo
+          .createQueryBuilder('s')
+          .select('s.id')
+          .where('s.id = :id')
+          .getQuery() +
+        ')',
+      )
+      .setParameters({ id: snapshotId })
+      .getMany();
+
+    // 3) 파일 조회 — 서브쿼리로 해당 스냅샷의 directoryIds 매칭
+    const files = await this.fileRepo
+      .createQueryBuilder('file')
+      .where(
+        'file.directoryId IN (' +
+        this.directoryRepo
+          .createQueryBuilder('d')
+          .select('d.id')
+          .where('d.snapshotId = :id')
+          .getQuery() +
+        ')',
+      )
+      .setParameters({ id: snapshotId })
+      .getMany();
+
+    // 4) 클래스 조회 — 서브쿼리로 해당 스냅샷의 fileIds 매칭
+    const classes = await this.classRepo
+      .createQueryBuilder('cls')
+      .where(
+        'cls.fileId IN (' +
+        this.fileRepo
+          .createQueryBuilder('f')
+          .select('f.id')
+          .where(
+            'f.directoryId IN (' +
+            this.directoryRepo
+              .createQueryBuilder('d2')
+              .select('d2.id')
+              .where('d2.snapshotId = :id')
+              .getQuery() +
+            ')',
+          )
+          .getQuery() +
+        ')',
+      )
+      .setParameters({ id: snapshotId })
+      .getMany();
+
+    // 5) 함수 조회 — 파일 레벨 함수 + 클래스 메서드 모두
+    const functions = await this.functionRepo
+      .createQueryBuilder('fn')
+      .where(
+        'fn.fileId IN (' +
+        this.fileRepo
+          .createQueryBuilder('f2')
+          .select('f2.id')
+          .where(
+            'f2.directoryId IN (' +
+            this.directoryRepo
+              .createQueryBuilder('d3')
+              .select('d3.id')
+              .where('d3.snapshotId = :id')
+              .getQuery() +
+            ')',
+          )
+          .getQuery() +
+        ')',
+      )
+      .orWhere(
+        'fn.classId IN (' +
+        this.classRepo
+          .createQueryBuilder('c2')
+          .select('c2.id')
+          .where(
+            'c2.fileId IN (' +
+            this.fileRepo
+              .createQueryBuilder('f3')
+              .select('f3.id')
+              .where(
+                'f3.directoryId IN (' +
+                this.directoryRepo
+                  .createQueryBuilder('d4')
+                  .select('d4.id')
+                  .where('d4.snapshotId = :id')
+                  .getQuery() +
+                ')',
+              )
+              .getQuery() +
+            ')',
+          )
+          .getQuery() +
+        ')',
+      )
+      .setParameters({ id: snapshotId })
+      .getMany();
+
+    // 6) 메모리에서 트리 조립
+    // 클래스에 함수(메서드) 매핑
+    const classMap = new Map<number, AstClass & { methods: AstFunction[] }>();
+    for (const cls of classes) {
+      classMap.set(cls.id, { ...cls, methods: [] });
+    }
+    for (const fn of functions) {
+      if (fn.classId && classMap.has(fn.classId)) {
+        classMap.get(fn.classId)!.methods.push(fn);
+      }
+    }
+
+    // 파일에 클래스 + 파일 레벨 함수 매핑
+    const fileMap = new Map<number, AstFile & { classes: any[]; fileFunctions: AstFunction[] }>();
+    for (const file of files) {
+      fileMap.set(file.id, { ...file, classes: [], fileFunctions: [] });
+    }
+    for (const [, cls] of classMap) {
+      if (fileMap.has(cls.fileId)) {
+        fileMap.get(cls.fileId)!.classes.push(cls);
+      }
+    }
+    for (const fn of functions) {
+      if (fn.fileId && !fn.classId && fileMap.has(fn.fileId)) {
+        fileMap.get(fn.fileId)!.fileFunctions.push(fn);
+      }
+    }
+
+    // 디렉토리에 파일 매핑
+    const dirMap = new Map<number, AstDirectory & { files: any[] }>();
+    for (const dir of directories) {
+      dirMap.set(dir.id, { ...dir, files: [] });
+    }
+    for (const [, file] of fileMap) {
+      if (dirMap.has(file.directoryId)) {
+        dirMap.get(file.directoryId)!.files.push(file);
+      }
+    }
+
+    // 스냅샷에 디렉토리 매핑
+    snapshot.directories = Array.from(dirMap.values()) as any;
+
+    return snapshot;
+  }
+
+  /**
    * 전체 스냅샷 목록 조회 (관계 포함)
    */
   async getAllSnapshots(): Promise<AstSnapshot[]> {

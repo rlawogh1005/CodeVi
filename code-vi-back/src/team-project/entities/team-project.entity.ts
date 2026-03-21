@@ -2,7 +2,6 @@ import { CodeAnalysis } from '../../code-analysis/entities/code-analysis.entity'
 import { CommonEntity } from '../../common/entities/common.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
-import { AstData } from 'src/ast-data/entity/ast-data.entity';
 
 @Entity()
 export class TeamProject extends CommonEntity {
@@ -20,8 +19,7 @@ export class TeamProject extends CommonEntity {
   })
   codeAnalyses: CodeAnalysis[];
 
-  @OneToMany(() => AstData, (astData) => astData.teamProject, { cascade: true })
-  astDatas: AstData[];
+
 
   @ManyToMany(() => User, (user) => user.teamProjects)
   @JoinTable()

@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -8,7 +8,6 @@ import { TeamProject } from './entities/team-project.entity';
 import { CodeAnalysis } from '../code-analysis/entities/code-analysis.entity';
 import { CreateTeamProjectAnalysisDto } from './dto/create-team-project.dto';
 import { TeamProjectResponseDto } from './dto/team-project-response.dto';
-import { AstData } from 'src/ast-data/entity/ast-data.entity';
 
 @Injectable()
 export class TeamProjectService {
@@ -37,11 +36,9 @@ export class TeamProjectService {
         });
         project = await manager.save(project);
       }
-      const astData = manager.create(AstData, {
-        astContent: dto.astData,
-        teamProject: project,
-      });
-      await manager.save(astData);
+
+      // [LEGACY REMOVED] AstData JSON 저장 로직 제거됨
+      // AST 데이터는 이제 /api/ast-data/relational 엔드포인트를 통해 저장됩니다.
 
       const newAnalysis = manager.create(CodeAnalysis, {
         ...dto.analysis,
@@ -124,13 +121,6 @@ export class TeamProjectService {
       .addSelect(['project.id', 'project.teamName', 'project.JenkinsJobName'])
       .leftJoin('project.users', 'user')
       .addSelect(['user.username'])
-      // AST Data ID 연결 (생성 시간이 1초 이내인 데이터) - astContent는 제외하고 ID만 가져옴
-      .leftJoin(
-        AstData,
-        'astData',
-        'astData.teamProjectId = project.id AND ABS(TIMESTAMPDIFF(SECOND, analysis.createdAt, astData.createdAt)) <= 1',
-      )
-      .addSelect('astData.id', 'astDataId')
       .orderBy('analysis.createdAt', 'DESC')
       .getRawAndEntities();
 
@@ -138,9 +128,6 @@ export class TeamProjectService {
       const project = analysis.teamProject;
       // DTO 매핑을 위해 project 객체에 latestAnalysis 속성 추가
       (project as any).latestAnalysis = analysis;
-      // Raw 결과에서 astDataId 추출
-      const rawRow = history.raw[index];
-      (analysis as any).astDataId = rawRow?.astDataId ?? null;
 
       return new TeamProjectResponseDto(project);
     });
@@ -158,13 +145,6 @@ export class TeamProjectService {
         'CodeAnalysis',
         'analysis',
         'analysis.teamProjectId = project.id AND analysis.id = (SELECT MAX(ca.id) FROM code_analysis ca WHERE ca.teamProjectId = project.id)',
-      )
-      .leftJoinAndMapOne(
-        'project.latestAstData',
-        'AstData',
-        'astData',
-        'astData.teamProjectId = project.id AND astData.id = :astId',
-        { astId },
       )
       .where('project.id = :id', { id: projectId })
       .getOne();

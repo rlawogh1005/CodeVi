@@ -35,6 +35,8 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '1000mb' }));
   app.use(bodyParser.urlencoded({ limit: '1000mb', extended: true }));
 
+  app.setGlobalPrefix('api')
+
   const config = new DocumentBuilder()
     .setTitle('MP Project API')
     .setDescription('MP Project 백엔드 API 문서입니다.')
@@ -42,8 +44,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  app.setGlobalPrefix('api')
 
   // CORS 설정
   const allowedOrigins = [

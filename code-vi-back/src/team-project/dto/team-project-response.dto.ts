@@ -17,7 +17,6 @@ export class TeamProjectResponseDto {
     cognitiveComplexity: number;
     ncloc: number;
     createdAt: Date;
-    astDataId: number | null;
   } | null;
 
   constructor(project: TeamProject) {
@@ -42,18 +41,7 @@ export class TeamProjectResponseDto {
           cognitiveComplexity: analysis.cognitive_complexity,
           ncloc: analysis.ncloc,
           createdAt: analysis.createdAt,
-          astDataId: analysis.astDataId || null, // AST Data ID 매핑
         }
       : null;
-  }
-}
-
-export class TeamProjectResponseDtoWithAstData extends TeamProjectResponseDto {
-  astData: any;
-
-  constructor(project: TeamProject) {
-    super(project);
-    // MapOne result from the query builder
-    this.astData = (project as any).latestAstData ?? null;
   }
 }
