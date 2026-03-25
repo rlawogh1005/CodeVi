@@ -1,5 +1,5 @@
-import { CommonEntity } from 'src/common/entities/common.entity';
-import { TeamProject } from 'src/team-project/entities/team-project.entity';
+import { CommonEntity } from '../../common/entities/common.entity';
+import { TeamProject } from '../../team-project/entities/team-project.entity';
 import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { AstDirectory } from './ast-directory.entity';
 
@@ -8,9 +8,15 @@ export class AstSnapshot extends CommonEntity {
   @Column()
   teamProjectId: number;
 
+  // @Column()
+  // buildNumber: number;
+
   @ManyToOne(() => TeamProject, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'teamProjectId' })
   teamProject: TeamProject;
+
+  @Column({ type: 'json', nullable: true, select: false })
+  wholeJson: any;
 
   @OneToMany(() => AstDirectory, (dir) => dir.snapshot, { cascade: true })
   directories: AstDirectory[];
