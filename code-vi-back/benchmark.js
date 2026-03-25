@@ -43,6 +43,15 @@ function calcStats(durations) {
 
 function formatMs(v) { return v.toFixed(2); }
 
+function formatMemory(bytes) {
+    if (bytes === 0) return '0 B';
+    const kb = bytes / 1024;
+    if (kb < 1024) {
+        return `${kb.toFixed(2)} KB`;
+    }
+    return `${(kb / 1024).toFixed(2)} MB`;
+}
+
 // ═══════════════════════════════════════════════════════
 // 측정 함수
 // ═══════════════════════════════════════════════════════
@@ -52,8 +61,12 @@ async function runStep(name, fn) {
     try {
         const result = await fn();
         const duration = performance.now() - start;
-        console.log(`✅ ${name}: ${duration.toFixed(2)}ms`);
-        return { duration, result };
+        let memDiffText = '';
+        if (result.data?.serverMemoryBytes) {
+            memDiffText = ` | Server Mem: ${(result.data.serverMemoryBytes / 1024 / 1024).toFixed(2)} MB`;
+        }
+        console.log(`✅ ${name}: ${duration.toFixed(2)}ms${memDiffText}`);
+        return { duration, result, serverMemoryBytes: result.data?.serverMemoryBytes || 0 };
     } catch (e) {
         console.log(`❌ ${name} failed: ${e.response?.status} - ${JSON.stringify(e.response?.data) || e.message}`);
         return { duration: 0, error: e.message };
@@ -61,14 +74,15 @@ async function runStep(name, fn) {
 }
 
 /**
- * 단일 요청 측정 — 클라이언트 E2E 시간과 서버 쿼리 시간을 분리 기록
+ * 단일 요청 측정 — 클라이언트 E2E 시간과 서버 쿼리 시간, 메모리 분리 기록
  */
 async function measureOnce(fn) {
     const clientStart = performance.now();
     const response = await fn();
     const clientMs = performance.now() - clientStart;
     const serverMs = response.data?.serverQueryMs ?? null;
-    return { clientMs, serverMs };
+    const serverMem = response.data?.serverMemoryBytes ?? null;
+    return { clientMs, serverMs, serverMem };
 }
 
 function countNodes(snapshot) {
@@ -140,23 +154,36 @@ async function benchmark() {
             gcEnabled: canGC,
             timestamp: new Date().toISOString()
         },
-        save: { relational: 0 },
-        get: { relational: 0 },
+        save: { totalClientMs: 0, totalServerMemoryBytes: 0, jsonSaveMs: 0, jsonSaveMem: 0, relationalSaveMs: 0, relationalSaveMem: 0 },
+        get: { relational: 0, serverMemoryBytes: 0 },
         counts: { relational: {} },
         queryBenchmark: {
-            join: { client: {}, server: {} },
-            nested: { client: {}, server: {} }
+            wholeJson: { client: {}, server: {}, memory: {} },
+            join: { client: {}, server: {}, memory: {} },
+            nested: { client: {}, server: {}, memory: {} }
         }
     };
 
-    // 3. Save Benchmark (Relational Only)
+    // 3. Save Benchmark (Whole JSON vs Relational)
     console.log('\n--- Save (Write) Efficiency ---');
-    const relSave = await runStep('Relational: Save AST', () => axios.post(`${RELATIONAL_BASE}/ast-data/relational`, payload, {
+    const relSave = await runStep('Save AST (Whole JSON + Relational Tree)', () => axios.post(`${RELATIONAL_BASE}/ast-data/relational`, payload, {
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
         timeout: 30 * 60 * 1000
     }));
-    results.save.relational = relSave.duration;
+    results.save.totalClientMs = relSave.duration;
+    results.save.totalServerMemoryBytes = relSave.serverMemoryBytes;
+    
+    // Extract server-side separated metrics
+    const jsonSaveMs = relSave.result?.data?.jsonSaveMs || 0;
+    const jsonSaveMem = relSave.result?.data?.jsonSaveMem || 0;
+    const relationalSaveMs = relSave.result?.data?.relationalSaveMs || 0;
+    const relationalSaveMem = relSave.result?.data?.relationalSaveMem || 0;
+
+    results.save.jsonSaveMs = jsonSaveMs;
+    results.save.jsonSaveMem = jsonSaveMem;
+    results.save.relationalSaveMs = relationalSaveMs;
+    results.save.relationalSaveMem = relationalSaveMem;
 
     // 4. Retrieve Benchmark and Inspect Data
     console.log('\n--- Full Retrieval (Read) Efficiency & Content Stats ---');
@@ -172,78 +199,72 @@ async function benchmark() {
         results.counts.relational = countNodes(snapshot);
 
         // ═══════════════════════════════════════════════════════
-        // 5. Natural Join vs Nested SQL — 교차 실행 벤치마크
+        // 5. Query Method Benchmark: Whole JSON vs Natural Join vs Nested SQL
         // ═══════════════════════════════════════════════════════
         console.log(`\n${'═'.repeat(60)}`);
-        console.log('   📊 Query Method Benchmark: Natural Join vs Nested SQL');
+        console.log('   📊 Query Method Benchmark: Whole JSON vs Natural Join vs Nested SQL');
         console.log(`${'═'.repeat(60)}`);
         console.log(`   Snapshot ID: ${relId}`);
         console.log(`   Warmup iterations: ${WARMUP_ITERATIONS}`);
         console.log(`   Benchmark iterations: ${BENCHMARK_ITERATIONS}`);
         console.log(`   Cooldown per iteration: ${COOLDOWN_MS}ms`);
-        console.log(`   Execution mode: INTERLEAVED (alternating)`);
+        console.log(`   Execution mode: INTERLEAVED (alternating 3 methods)`);
         console.log(`${'─'.repeat(60)}`);
 
         const joinFn = () => axios.get(`${RELATIONAL_BASE}/ast-data/relational/benchmark/natural-join/${relId}`, { timeout: 5 * 60 * 1000 });
         const nestedFn = () => axios.get(`${RELATIONAL_BASE}/ast-data/relational/benchmark/nested/${relId}`, { timeout: 5 * 60 * 1000 });
+        const wholeJsonFn = () => axios.get(`${RELATIONAL_BASE}/ast-data/relational/benchmark/whole-json/${relId}`, { timeout: 5 * 60 * 1000 });
 
-        // ── Warmup (양쪽 균등하게) ──
+        // ── Warmup ──
         console.log(`\n🔥 Warming up (${WARMUP_ITERATIONS} iterations each)...`);
         for (let i = 0; i < WARMUP_ITERATIONS; i++) {
+            await wholeJsonFn();
             await joinFn();
             await nestedFn();
             process.stdout.write(`  warmup ${i + 1}/${WARMUP_ITERATIONS}\r`);
         }
-        console.log(`  ✅ Warmup complete (${WARMUP_ITERATIONS * 2} total calls)`);
+        console.log(`  ✅ Warmup complete (${WARMUP_ITERATIONS * 3} total calls)`);
 
-        // GC before benchmark
         if (canGC) {
             global.gc();
             await sleep(200);
         }
 
-        // ── 교차 실행 (Interleaved Execution) ──
+        // ── 실행 ──
         console.log(`\n⏱  Running INTERLEAVED benchmark (${BENCHMARK_ITERATIONS} iterations)...`);
 
-        const joinClientDurations = [];
-        const joinServerDurations = [];
-        const nestedClientDurations = [];
-        const nestedServerDurations = [];
+        const metrics = {
+            wholeJson: { client: [], server: [], memory: [] },
+            join: { client: [], server: [], memory: [] },
+            nested: { client: [], server: [], memory: [] }
+        };
+
+        const methods = [
+            { key: 'wholeJson', fn: wholeJsonFn },
+            { key: 'join', fn: joinFn },
+            { key: 'nested', fn: nestedFn }
+        ];
 
         for (let i = 0; i < BENCHMARK_ITERATIONS; i++) {
-            // GC before each iteration pair
             if (canGC) global.gc();
 
+            // 순서 로테이션
+            const order = methods.slice();
+            const shiftCount = i % 3;
+            for(let k=0; k<shiftCount; k++) order.push(order.shift());
+
             try {
-                if (i % 2 === 0) {
-                    // 짝수: Join → Nested 순서
-                    const j = await measureOnce(joinFn);
+                for (const item of order) {
+                    const m = await measureOnce(item.fn);
+                    metrics[item.key].client.push(m.clientMs);
+                    if (m.serverMs !== null && m.serverMs !== undefined) metrics[item.key].server.push(m.serverMs);
+                    if (m.serverMem !== null && m.serverMem !== undefined) metrics[item.key].memory.push(m.serverMem);
                     await sleep(COOLDOWN_MS);
-                    const n = await measureOnce(nestedFn);
-
-                    joinClientDurations.push(j.clientMs);
-                    if (j.serverMs !== null) joinServerDurations.push(j.serverMs);
-                    nestedClientDurations.push(n.clientMs);
-                    if (n.serverMs !== null) nestedServerDurations.push(n.serverMs);
-                } else {
-                    // 홀수: Nested → Join 순서
-                    const n = await measureOnce(nestedFn);
-                    await sleep(COOLDOWN_MS);
-                    const j = await measureOnce(joinFn);
-
-                    joinClientDurations.push(j.clientMs);
-                    if (j.serverMs !== null) joinServerDurations.push(j.serverMs);
-                    nestedClientDurations.push(n.clientMs);
-                    if (n.serverMs !== null) nestedServerDurations.push(n.serverMs);
                 }
             } catch (e) {
                 console.log(`  ❌ Iteration ${i + 1} failed: ${e.message}`);
             }
 
-            // Cooldown between iteration pairs
-            await sleep(COOLDOWN_MS);
-
-            // Progress
             if ((i + 1) % 5 === 0 || i === BENCHMARK_ITERATIONS - 1) {
                 process.stdout.write(`  progress: ${i + 1}/${BENCHMARK_ITERATIONS}\r`);
             }
@@ -251,91 +272,77 @@ async function benchmark() {
         console.log(`\n  ✅ Benchmark complete.`);
 
         // ── 통계 계산 ──
-        const joinClientStats = calcStats(joinClientDurations);
-        const nestedClientStats = calcStats(nestedClientDurations);
-        const joinServerStats = calcStats(joinServerDurations);
-        const nestedServerStats = calcStats(nestedServerDurations);
+        const stats = {
+            wholeJson: {
+                client: calcStats(metrics.wholeJson.client),
+                server: calcStats(metrics.wholeJson.server),
+                memory: calcStats(metrics.wholeJson.memory)
+            },
+            join: {
+                client: calcStats(metrics.join.client),
+                server: calcStats(metrics.join.server),
+                memory: calcStats(metrics.join.memory)
+            },
+            nested: {
+                client: calcStats(metrics.nested.client),
+                server: calcStats(metrics.nested.server),
+                memory: calcStats(metrics.nested.memory)
+            }
+        };
 
-        results.queryBenchmark.join.client = joinClientStats;
-        results.queryBenchmark.join.server = joinServerStats;
-        results.queryBenchmark.nested.client = nestedClientStats;
-        results.queryBenchmark.nested.server = nestedServerStats;
-
-        // 데이터 일관성 검증
-        console.log('\n🔍 Validating data consistency...');
-        try {
-            const joinResp = await joinFn();
-            const nestedResp = await nestedFn();
-            const joinData = joinResp.data.data;
-            const nestedData = nestedResp.data.data;
-
-            const joinCounts = countNodes(joinData);
-            const nestedCounts = countNodes(nestedData);
-
-            const isConsistent =
-                joinCounts.directories === nestedCounts.directories &&
-                joinCounts.files === nestedCounts.files &&
-                joinCounts.classes === nestedCounts.classes &&
-                joinCounts.functions === nestedCounts.functions;
-
-            console.log(`   JOIN    → dirs: ${joinCounts.directories}, files: ${joinCounts.files}, classes: ${joinCounts.classes}, funcs: ${joinCounts.functions}`);
-            console.log(`   Nested  → dirs: ${nestedCounts.directories}, files: ${nestedCounts.files}, classes: ${nestedCounts.classes}, funcs: ${nestedCounts.functions}`);
-            console.log(`   ${isConsistent ? '✅ Data is CONSISTENT — both methods return identical counts.' : '⚠️  Data MISMATCH — counts differ between methods!'}`);
-        } catch (e) {
-            console.log(`   ❌ Validation failed: ${e.message}`);
-        }
+        results.queryBenchmark.wholeJson = stats.wholeJson;
+        results.queryBenchmark.join = stats.join;
+        results.queryBenchmark.nested = stats.nested;
 
         // ── 결과 출력 ──
         console.log(`\n${'═'.repeat(60)}`);
-        console.log('   📊 Query Benchmark Results — Client E2E Time');
+        console.log('   📊 Query Benchmark Results — Client E2E Time (ms)');
         console.log(`${'═'.repeat(60)}`);
         console.table({
-            'Avg (ms)': { 'Natural Join': formatMs(joinClientStats.avg), 'Nested SQL': formatMs(nestedClientStats.avg), Winner: joinClientStats.avg < nestedClientStats.avg ? '🏆 Natural Join' : '🏆 Nested SQL' },
-            'Median (ms)': { 'Natural Join': formatMs(joinClientStats.median), 'Nested SQL': formatMs(nestedClientStats.median), Winner: joinClientStats.median < nestedClientStats.median ? '🏆 Natural Join' : '🏆 Nested SQL' },
-            'Std Dev (ms)': { 'Natural Join': formatMs(joinClientStats.std), 'Nested SQL': formatMs(nestedClientStats.std) },
-            'P95 (ms)': { 'Natural Join': formatMs(joinClientStats.p95), 'Nested SQL': formatMs(nestedClientStats.p95) },
-            'Min (ms)': { 'Natural Join': formatMs(joinClientStats.min), 'Nested SQL': formatMs(nestedClientStats.min) },
-            'Max (ms)': { 'Natural Join': formatMs(joinClientStats.max), 'Nested SQL': formatMs(nestedClientStats.max) },
+            'Avg': { 'Whole JSON': formatMs(stats.wholeJson.client.avg), 'Natural Join': formatMs(stats.join.client.avg), 'Nested SQL': formatMs(stats.nested.client.avg) },
+            'Median': { 'Whole JSON': formatMs(stats.wholeJson.client.median), 'Natural Join': formatMs(stats.join.client.median), 'Nested SQL': formatMs(stats.nested.client.median) },
+            'Std Dev': { 'Whole JSON': formatMs(stats.wholeJson.client.std), 'Natural Join': formatMs(stats.join.client.std), 'Nested SQL': formatMs(stats.nested.client.std) },
+            'P95': { 'Whole JSON': formatMs(stats.wholeJson.client.p95), 'Natural Join': formatMs(stats.join.client.p95), 'Nested SQL': formatMs(stats.nested.client.p95) },
         });
 
-        if (joinServerStats.count > 0 && nestedServerStats.count > 0) {
-            console.log(`\n${'═'.repeat(60)}`);
-            console.log('   📊 Query Benchmark Results — Server Query Time (순수 쿼리)');
-            console.log(`${'═'.repeat(60)}`);
-            console.table({
-                'Avg (ms)': { 'Natural Join': formatMs(joinServerStats.avg), 'Nested SQL': formatMs(nestedServerStats.avg), Winner: joinServerStats.avg < nestedServerStats.avg ? '🏆 Natural Join' : '🏆 Nested SQL' },
-                'Median (ms)': { 'Natural Join': formatMs(joinServerStats.median), 'Nested SQL': formatMs(nestedServerStats.median), Winner: joinServerStats.median < nestedServerStats.median ? '🏆 Natural Join' : '🏆 Nested SQL' },
-                'Std Dev (ms)': { 'Natural Join': formatMs(joinServerStats.std), 'Nested SQL': formatMs(nestedServerStats.std) },
-                'P95 (ms)': { 'Natural Join': formatMs(joinServerStats.p95), 'Nested SQL': formatMs(nestedServerStats.p95) },
-                'Min (ms)': { 'Natural Join': formatMs(joinServerStats.min), 'Nested SQL': formatMs(nestedServerStats.min) },
-                'Max (ms)': { 'Natural Join': formatMs(joinServerStats.max), 'Nested SQL': formatMs(nestedServerStats.max) },
-            });
+        console.log(`\n${'═'.repeat(60)}`);
+        console.log('   📊 Query Benchmark Results — Server Query Time (ms)');
+        console.log(`${'═'.repeat(60)}`);
+        console.table({
+            'Avg': { 'Whole JSON': formatMs(stats.wholeJson.server.avg), 'Natural Join': formatMs(stats.join.server.avg), 'Nested SQL': formatMs(stats.nested.server.avg) },
+            'Median': { 'Whole JSON': formatMs(stats.wholeJson.server.median), 'Natural Join': formatMs(stats.join.server.median), 'Nested SQL': formatMs(stats.nested.server.median) },
+            'Std Dev': { 'Whole JSON': formatMs(stats.wholeJson.server.std), 'Natural Join': formatMs(stats.join.server.std), 'Nested SQL': formatMs(stats.nested.server.std) },
+            'P95': { 'Whole JSON': formatMs(stats.wholeJson.server.p95), 'Natural Join': formatMs(stats.join.server.p95), 'Nested SQL': formatMs(stats.nested.server.p95) },
+        });
 
-            // HTTP 오버헤드 분석
-            const joinOverhead = joinClientStats.avg - joinServerStats.avg;
-            const nestedOverhead = nestedClientStats.avg - nestedServerStats.avg;
-            console.log(`\n📡 HTTP Overhead (avg): Join ${formatMs(joinOverhead)}ms, Nested ${formatMs(nestedOverhead)}ms`);
-        }
+        console.log(`\n${'═'.repeat(60)}`);
+        console.log('   📊 Query Benchmark Results — Server Memory Usage');
+        console.log(`${'═'.repeat(60)}`);
+        console.table({
+            'Avg': { 'Whole JSON': formatMemory(stats.wholeJson.memory.avg), 'Natural Join': formatMemory(stats.join.memory.avg), 'Nested SQL': formatMemory(stats.nested.memory.avg) },
+            'Median': { 'Whole JSON': formatMemory(stats.wholeJson.memory.median), 'Natural Join': formatMemory(stats.join.memory.median), 'Nested SQL': formatMemory(stats.nested.memory.median) },
+            'Std Dev': { 'Whole JSON': formatMemory(stats.wholeJson.memory.std), 'Natural Join': formatMemory(stats.join.memory.std), 'Nested SQL': formatMemory(stats.nested.memory.std) },
+            'P95': { 'Whole JSON': formatMemory(stats.wholeJson.memory.p95), 'Natural Join': formatMemory(stats.join.memory.p95), 'Nested SQL': formatMemory(stats.nested.memory.p95) },
+        });
 
-        // 결론
-        const clientRatio = (Math.max(joinClientStats.avg, nestedClientStats.avg) / Math.min(joinClientStats.avg, nestedClientStats.avg)).toFixed(2);
-        const clientWinner = joinClientStats.avg < nestedClientStats.avg ? 'Natural Join' : 'Nested SQL';
-        console.log(`\n💡 결론 (Client E2E): ${clientWinner} 방식이 평균 ${clientRatio}배 빠름`);
-
-        if (joinServerStats.count > 0 && nestedServerStats.count > 0) {
-            const serverRatio = (Math.max(joinServerStats.avg, nestedServerStats.avg) / Math.min(joinServerStats.avg, nestedServerStats.avg)).toFixed(2);
-            const serverWinner = joinServerStats.avg < nestedServerStats.avg ? 'Natural Join' : 'Nested SQL';
-            console.log(`💡 결론 (Server Query): ${serverWinner} 방식이 평균 ${serverRatio}배 빠름`);
-        }
     }
 
-    // 최종 결과 요약
-    console.log('\n📊 Relational Benchmark Summary:');
+        // 저장 성능 비교
+    console.log(`\n${'═'.repeat(60)}`);
+    console.log('   📊 Save (Write) Performance Comparison');
+    console.log(`${'═'.repeat(60)}`);
     console.table({
-        'Save Time (Write)': { Relational: `${results.save.relational.toFixed(2)} ms` },
-        'Full Fetch Time (Read)': { Relational: `${results.get.relational.toFixed(2)} ms` },
-        'Stored Files': { Relational: results.counts.relational.files },
-        'Stored Functions': { Relational: results.counts.relational.functions }
+        'Server Time (ms)': { 'Whole JSON': formatMs(results.save.jsonSaveMs), 'Relational Tree': formatMs(results.save.relationalSaveMs) },
+        'Server Memory': { 'Whole JSON': formatMemory(results.save.jsonSaveMem), 'Relational Tree': formatMemory(results.save.relationalSaveMem) }
+    });
+
+        // 최종 결과 요약
+    console.log('\n📊 Overall Relational Summary (Client / Fetch Focus):');
+    console.table({
+        'Total Save E2E (Client)': { Time: `${results.save.totalClientMs.toFixed(2)} ms` },
+        'Total Fetch Time (Client)': { Time: `${results.get.relational.toFixed(2)} ms` },
+        'Stored Files': { Count: String(results.counts.relational.files) },
+        'Stored Functions': { Count: String(results.counts.relational.functions) }
     });
 
     console.log('\n💡 Analysis:');
