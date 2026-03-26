@@ -315,6 +315,11 @@ export function calculateCBO(
     const dependencies = new Set<string>();
     const className = ownClassName || extractClassName(classNode);
 
+    const parentName = extractParentClassName(classNode);
+    if (parentName && parentName !== className) {
+        dependencies.add(parentName);
+    }
+
     // Import된 클래스 추가
     for (const imp of imports) {
         if (imp !== className) {
@@ -414,9 +419,16 @@ export function calculateRFC(classNode: AstNode): number {
         collectCalledMethods(method, calledMethods);
     }
 
-    // RFC = 클래스 내 메서드 수 + (중복 없는) 외부 메서드 호출 수
-    // 참고: 여기서는 자신의 메서드 호출도 포함
-    return methods.length + calledMethods.size;
+    // RFC = |RS|, where RS is the response set uniting the class's methods and called methods
+    // Unnamed methods are still a part of the class, so we use their base count.
+    let rfc = methods.length;
+    for (const called of calledMethods) {
+        if (!methodNames.has(called)) {
+            rfc++;
+        }
+    }
+
+    return rfc;
 }
 
 /**
@@ -536,6 +548,19 @@ export function calculateLCOM(classNode: AstNode): number {
     let Q = 0; // 공유하는 쌍
 
     const methodList = Array.from(methodFieldAccess.entries());
+
+    // Paper: "If all n sets {I1}...{In} are empty then let P = empty"
+    let allEmpty = true;
+    for (const [, accessedFields] of methodList) {
+        if (accessedFields.size > 0) {
+            allEmpty = false;
+            break;
+        }
+    }
+    
+    if (allEmpty) {
+        return 0; // LCOM is 0
+    }
 
     for (let i = 0; i < methodList.length; i++) {
         for (let j = i + 1; j < methodList.length; j++) {
@@ -708,9 +733,29 @@ export function buildProjectContext(classNodes: AstNode[]): ProjectContext {
         allClasses.add(extractClassName(classNode));
     }
 
+    // OO-metrics에 필요한 맵도 컨텍스트에 포함 (추가)
+    const classMethodsMap = new Map<string, number>();
+    const classMethodNamesMap = new Map<string, Set<string>>();
+
+    for (const classNode of classNodes) {
+        const className = extractClassName(classNode);
+        const methods = extractMethods(classNode);
+        
+        classMethodsMap.set(className, methods.length);
+        
+        const methodNames = new Set<string>();
+        for (const method of methods) {
+            const name = method.name || findMethodName(method);
+            if (name) methodNames.add(name);
+        }
+        classMethodNamesMap.set(className, methodNames);
+    }
+
     return {
         inheritanceMap,
         childrenMap,
         allClasses,
+        classMethodsMap,
+        classMethodNamesMap,
     };
 }
