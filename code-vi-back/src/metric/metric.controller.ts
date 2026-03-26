@@ -6,6 +6,7 @@ import {
   FileMetricResultDto,
   ClassicMetricsDto,
   CKMetricsDto,
+  OOMetricsDto,
   CodeSmellDto,
 } from './dto/metric-result.dto';
 
@@ -71,6 +72,23 @@ export class MetricController {
     const result = this.metricService.calculateAllCKMetrics(ast);
 
     return result as CKMetricsDto[];
+  }
+
+  /**
+   * AST 데이터에서 추가 객체지향 지표만 계산합니다.
+   */
+  @Post('analyze/oo')
+  @ApiOperation({ summary: 'OO 메트릭 계산 (PMI, PMIS, DMC, MAA, DAC, POM, UCGU, DCBO, PrIM, SML)' })
+  @ApiResponse({
+    status: 200,
+    description: 'OO 메트릭 결과 배열',
+    type: [OOMetricsDto],
+  })
+  analyzeOOMetrics(@Body() dto: AnalyzeAstRequestDto): OOMetricsDto[] {
+    const ast = Array.isArray(dto.astData) ? dto.astData[0] : dto.astData;
+    const result = this.metricService.calculateAllOOMetrics(ast);
+
+    return result as OOMetricsDto[];
   }
 
   /**

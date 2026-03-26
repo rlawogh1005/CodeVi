@@ -77,6 +77,23 @@ export interface CKMetrics {
 }
 
 /**
+ * OO Metrics (Neal et al. 1997)
+ */
+export interface OOMetrics {
+    className: string;
+    pmi: number;          // Potential Methods Inherited
+    pmis: number;         // Proportion of Methods Inherited by a Subclass
+    dmc: number;          // Density of Methodological Cohesiveness
+    maa: number;          // Messages and Arguments
+    dac: number;          // Density of Abstract Classes
+    pom: number;          // Proportion of Overriding Methods in a Subclass
+    ucgu: number;         // Unnecessary Coupling through Global Usage
+    dcbo: number;         // Degree of Coupling between Classes
+    prim: number;         // Number of Private Instance Methods
+    sml: number;          // Strings of Message Links
+}
+
+/**
  * 프로젝트 전체의 상속 관계 정보
  */
 export interface InheritanceInfo {
@@ -92,6 +109,8 @@ export interface ProjectContext {
     inheritanceMap: Map<string, string>;  // className -> parentClassName
     childrenMap: Map<string, string[]>;   // className -> childClassNames[]
     allClasses: Set<string>;
+    classMethodsMap?: Map<string, number>;
+    classMethodNamesMap?: Map<string, Set<string>>;
 }
 
 // ============================================================================
@@ -224,6 +243,7 @@ export interface FileMetricResult {
     filePath: string;
     classic: ClassicMetrics;
     classes: CKMetrics[];
+    ooMetrics: OOMetrics[];
     codeSmells: CodeSmellResult[];
 }
 

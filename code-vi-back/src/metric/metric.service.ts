@@ -3,6 +3,7 @@ import {
     AstNode,
     ClassicMetrics,
     CKMetrics,
+    OOMetrics,
     CodeSmellResult,
     ProjectContext,
     FileMetricResult,
@@ -33,6 +34,7 @@ import {
     extractMethods,
     buildProjectContext,
 } from './logic/class/ck-metric';
+import { calculateOOMetrics } from './logic/class/oo-metric';
 
 // 코드 스멜
 import {
@@ -105,6 +107,26 @@ export class MetricService {
         );
     }
 
+    /**
+     * 클래스의 객체지향 지표(Neal et al. 1997)를 계산합니다.
+     */
+    calculateOOMetrics(
+        classNode: AstNode,
+        context?: ProjectContext,
+    ): OOMetrics {
+        return calculateOOMetrics(classNode, context);
+    }
+
+    /**
+     * AST에서 모든 클래스를 추출하고 객체지향 지표를 계산합니다.
+     */
+    calculateAllOOMetrics(ast: AstNode, context?: ProjectContext): OOMetrics[] {
+        const classes = extractClasses(ast);
+        return classes.map((classNode) =>
+            calculateOOMetrics(classNode, context),
+        );
+    }
+
     // ============================================================================
     // 코드 스멜 감지
     // ============================================================================
@@ -131,12 +153,14 @@ export class MetricService {
     ): FileMetricResult {
         const classic = this.calculateClassicMetrics(ast, sourceCode);
         const classes = this.calculateAllCKMetrics(ast, projectContext);
+        const ooMetrics = this.calculateAllOOMetrics(ast, projectContext);
         const codeSmells = this.detectCodeSmells(ast, filePath);
 
         return {
             filePath,
             classic,
             classes,
+            ooMetrics,
             codeSmells,
         };
     }

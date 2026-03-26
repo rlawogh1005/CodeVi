@@ -104,6 +104,45 @@ export class CKMetricsDto {
 }
 
 // ============================================================================
+// OO Metrics DTO
+// ============================================================================
+
+export class OOMetricsDto {
+    @ApiProperty({ description: '클래스 이름' })
+    className: string;
+
+    @ApiProperty({ description: 'Potential Methods Inherited' })
+    pmi: number;
+
+    @ApiProperty({ description: 'Proportion of Methods Inherited by a Subclass' })
+    pmis: number;
+
+    @ApiProperty({ description: 'Density of Methodological Cohesiveness' })
+    dmc: number;
+
+    @ApiProperty({ description: 'Messages and Arguments' })
+    maa: number;
+
+    @ApiProperty({ description: 'Density of Abstract Classes' })
+    dac: number;
+
+    @ApiProperty({ description: 'Proportion of Overriding Methods in a Subclass' })
+    pom: number;
+
+    @ApiProperty({ description: 'Unnecessary Coupling through Global Usage' })
+    ucgu: number;
+
+    @ApiProperty({ description: 'Degree of Coupling between Classes' })
+    dcbo: number;
+
+    @ApiProperty({ description: 'Number of Private Instance Methods' })
+    prim: number;
+
+    @ApiProperty({ description: 'Strings of Message Links' })
+    sml: number;
+}
+
+// ============================================================================
 // Code Smell DTO
 // ============================================================================
 
@@ -171,6 +210,12 @@ export class FileMetricResultDto {
         type: [CKMetricsDto],
     })
     classes: CKMetricsDto[];
+
+    @ApiProperty({
+        description: '클래스별 객체지향 지표 (Neal et al. 1997)',
+        type: [OOMetricsDto],
+    })
+    ooMetrics: OOMetricsDto[];
 
     @ApiProperty({
         description: '코드 스멜 목록',
