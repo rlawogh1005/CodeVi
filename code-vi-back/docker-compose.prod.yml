@@ -91,6 +91,7 @@ services:
       - MYSQL_DATABASE=${DATABASE_NAME:-codevi}
       - MYSQL_USER=${DATABASE_USERNAME:-jaehokim}
       - MYSQL_PASSWORD=${USER_DB_PASSWORD}
+      - TZ=Asia/Seoul
     ports:
       - "13306:3306"
     networks:

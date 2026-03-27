@@ -39,7 +39,6 @@ export class AstRelationalService {
     private readonly dataSource: DataSource,
   ) { }
 
-  // 클래스 상단에 추가
   private async measure<T>(
     name: string,
     fn: () => Promise<T>
@@ -58,9 +57,6 @@ export class AstRelationalService {
     return { data, latencyMs: +latency.toFixed(2), memKb: Math.floor(mem / 1024) };
   }
 
-  /**
-   * AST JSON 트리를 받아서 정규화된 엔티티로 분해 저장
-   */
   async saveAstData(dto: CreateRelationalAstDto): Promise<AstSnapshot> {
     const { jenkinsJobName, nodes } = dto;
 
@@ -72,7 +68,6 @@ export class AstRelationalService {
       throw new NotFoundException(`Project not found: ${jenkinsJobName}`);
     }
 
-    // 1. 트랜잭션 블록 안에서 시간 및 메모리를 측정하며 저장만 합니다.
     const resultStats = { jsonSaveMs: 0, jsonSaveMem: 0, relationalSaveMs: 0, relationalSaveMem: 0, snapshotId: 0 };
     await this.dataSource.transaction(async (manager) => {
       // 1) 스냅샷 생성
@@ -87,7 +82,7 @@ export class AstRelationalService {
       resultStats.jsonSaveMem = Math.max(0, process.memoryUsage().heapUsed - startJsonMem);
       resultStats.snapshotId = savedSnapshot.id;
 
-      // 2) 재귀적으로 노드들을 저장
+      // 2) 재귀적으로 노드들을 저장 (초기 호출 시 부모 컨텍스트는 모두 null)
       const startRelMem = process.memoryUsage().heapUsed;
       const startRelationalSave = performance.now();
       for (const node of nodes) {
@@ -99,7 +94,6 @@ export class AstRelationalService {
       this.logger.log(`Relational AST saved: snapshotId=${savedSnapshot.id}, project=${jenkinsJobName}`);
     });
 
-    // 2. 트랜잭션 커밋 이후 최종 조회 결과 반환
     const snapshotResult = await this.getSnapshotById(resultStats.snapshotId);
     return Object.assign(snapshotResult, {
       jsonSaveMs: +(resultStats.jsonSaveMs).toFixed(4),
@@ -110,22 +104,22 @@ export class AstRelationalService {
   }
 
   /**
-   * 재귀적으로 AST 노드를 처리하여 적절한 엔티티로 저장
+   * AST 노드를 재귀적으로 탐색하며 중첩 구조에 맞춰 부모 ID를 전달합니다.
    */
   private async processNode(
     manager: any,
     node: AstNodeInputDto,
     snapshotId: number,
     parentDirectoryId: number | null,
-    fileId?: number,
-    classId?: number,
+    fileId: number | null = null,
+    currentClassId: number | null = null,
+    currentFunctionId: number | null = null,
   ): Promise<void> {
-    // 타입 처리를 위해 대문자로 통일
     const nodeType = node.type ? node.type.toUpperCase() : '';
     const nodeName = this.extractNodeName(node);
 
     if (nodeType.includes('CLASS') || nodeType.includes('FUNC') || nodeType.includes('METHOD')) {
-      this.logger.debug(`👀 Found target node! Type: [${nodeType}], Name: [${nodeName}], FileID: ${fileId}`);
+      this.logger.debug(`👀 Target Found: [${nodeType}] ${nodeName} | classId:${currentClassId}, fnId:${currentFunctionId}`);
     }
 
     switch (nodeType) {
@@ -147,7 +141,7 @@ export class AstRelationalService {
 
       case 'FILE': {
         if (!parentDirectoryId) {
-          this.logger.warn(`FILE node "${node.name}" has no parent directory, skipping`);
+          this.logger.warn(`FILE node "${nodeName}" has no parent directory, skipping`);
           break;
         }
 
@@ -158,7 +152,8 @@ export class AstRelationalService {
         const savedFile = await manager.save(file);
 
         if (node.ast) {
-          await this.processNode(manager, node.ast, snapshotId, parentDirectoryId, savedFile.id);
+          // 파일 내부 진입: classId, functionId 컨텍스트 초기화
+          await this.processNode(manager, node.ast, snapshotId, parentDirectoryId, savedFile.id, null, null);
         }
         break;
       }
@@ -166,7 +161,7 @@ export class AstRelationalService {
       case 'CLASS_DEFINITION':
       case 'CLASS': {
         if (!fileId) {
-          this.logger.warn(`CLASS node "${node.name}" has no parent file, skipping`);
+          this.logger.warn(`CLASS node "${nodeName}" has no parent file, skipping`);
           break;
         }
 
@@ -177,37 +172,55 @@ export class AstRelationalService {
           startCol: node.range?.start?.col ?? 0,
           endLine: node.range?.end?.line ?? 0,
           endCol: node.range?.end?.col ?? 0,
+          // 현재 위치가 함수 안이라면 parentFunctionId, 기존 클래스 안이라면 parentClassId
+          parentClassId: currentFunctionId ? null : currentClassId,
+          parentFunctionId: currentFunctionId,
         });
         const savedClass = await manager.save(cls);
 
         if (node.children) {
           for (const child of node.children) {
-            await this.processNode(manager, child, snapshotId, parentDirectoryId, fileId, savedClass.id);
+            // 클래스 내부 진입: currentClassId 갱신, currentFunctionId 리셋
+            await this.processNode(manager, child, snapshotId, parentDirectoryId, fileId, savedClass.id, null);
           }
         }
         break;
       }
 
+      case 'ARROW_FUNCTION':
       case 'FUNCTION_DEFINITION':
       case 'METHOD': {
+        // 소속 판별
+        const isTopLevel = !currentClassId && !currentFunctionId;
+        const isMethod = !!currentClassId && !currentFunctionId;
+
         const fn = manager.create(AstFunction, {
           name: nodeName,
           startLine: node.range?.start?.line ?? 0,
           startCol: node.range?.start?.col ?? 0,
           endLine: node.range?.end?.line ?? 0,
           endCol: node.range?.end?.col ?? 0,
-          fileId: classId ? null : (fileId ?? null),
-          classId: classId ?? null,
+          // 최상단이면 fileId 부여, 메서드면 classId 부여, 중첩 함수면 parentFunctionId 부여
+          fileId: isTopLevel ? fileId : null,
+          classId: isMethod ? currentClassId : null,
+          parentFunctionId: currentFunctionId,
         });
-        await manager.save(fn);
+        const savedFn = await manager.save(fn);
+
+        if (node.children) {
+          for (const child of node.children) {
+            // 함수 내부 진입: currentFunctionId 갱신 (currentClassId는 유지하여 내부 클래스가 소속 파일을 알 수 있게 함)
+            await this.processNode(manager, child, snapshotId, parentDirectoryId, fileId, currentClassId, savedFn.id);
+          }
+        }
         break;
       }
 
       default:
-        // 관심 없는 노드라도 하위 탐색을 지속
+        // 관심 없는 구문(if, for, block 등)이더라도 그 안의 함수/클래스를 찾기 위해 현재 컨텍스트를 그대로 유지하고 하위 탐색
         if (node.children) {
           for (const child of node.children) {
-            await this.processNode(manager, child, snapshotId, parentDirectoryId, fileId, classId);
+            await this.processNode(manager, child, snapshotId, parentDirectoryId, fileId, currentClassId, currentFunctionId);
           }
         }
         break;
@@ -227,6 +240,8 @@ export class AstRelationalService {
         'directories.files.classes',
         'directories.files.classes.methods',
         'directories.files.fileFunctions',
+        // 재귀 조회를 위한 일부 뎁스 추가 (필요시 조절)
+        'directories.files.classes.methods.childFunctions',
       ],
     });
 
@@ -433,27 +448,41 @@ export class AstRelationalService {
   }
 
   /**
-   * 노드에서 이름을 추출하는 헬퍼 메서드
+   * [수정됨] 노드에서 이름을 우아하게 추출하는 헬퍼 메서드
    */
   private extractNodeName(node: AstNodeInputDto): string {
+    // 1. 명시적인 이름이 있는 경우
     if (node.name && node.name !== 'undefined' && node.name !== 'null') {
       return node.name;
     }
 
+    // 2. 자식 노드에서 Identifier(식별자)를 찾을 수 있는 경우
     if (node.children && Array.isArray(node.children)) {
       const nameNode = node.children.find((c) => c.fieldName === 'name');
-      if (nameNode) return nameNode.text || nameNode.name || 'Unknown_Name';
+      if (nameNode && nameNode.text) return nameNode.text;
 
       const idNode = node.children.find(
         (c) => c.type && (c.type.toLowerCase().includes('identifier') || c.type.toLowerCase() === 'name'),
       );
-      if (idNode) return idNode.text || idNode.name || 'Unknown_Name';
+      if (idNode && idNode.text) return idNode.text;
     }
 
-    if (node.text && node.text !== 'undefined' && node.text !== 'null') {
-      return node.text;
+    // 3. ⭐️ 이름이 없는 익명 함수/클래스인 경우 (위치 기반 식별자 자동 부여)
+    const nodeType = (node.type || 'unknown').toLowerCase();
+    const isTargetNode = nodeType.includes('func') || nodeType.includes('method') || nodeType.includes('class');
+
+    if (isTargetNode) {
+      const line = node.range?.start?.line ?? '0';
+      const col = node.range?.start?.col ?? '0';
+      // 에러 방지 및 완벽한 추적 가능성 확보: 예) <anonymous_function_L15_C20>
+      return `<anonymous_${nodeType}_L${line}_C${col}>`;
     }
 
-    return 'Unknown_Name';
+    // 4. 일반 무명 노드의 텍스트 폴백 (안전을 위해 최대 50자 제한)
+    const fallbackText = node.text && node.text !== 'undefined' && node.text !== 'null'
+      ? node.text
+      : 'Unknown_Node';
+
+    return fallbackText.length > 50 ? fallbackText.substring(0, 47) + '...' : fallbackText;
   }
 }

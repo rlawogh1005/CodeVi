@@ -29,4 +29,21 @@ export class AstClass extends CommonEntity {
 
   @OneToMany(() => AstFunction, (fn) => fn.ownerClass, { cascade: true })
   methods: AstFunction[];
+
+  @Column({ nullable: true })
+  parentClassId: number | null;
+
+  @ManyToOne(() => AstClass, (cls) => cls.childClasses, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'parentClassId' })
+  parentClass: AstClass | null;
+
+  @OneToMany(() => AstClass, (cls) => cls.parentClass, { cascade: true })
+  childClasses: AstClass[];
+
+  @Column({ nullable: true })
+  parentFunctionId: number | null;
+
+  @ManyToOne(() => AstFunction, (fn) => fn.childClasses, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'parentFunctionId' })
+  parentFunction: AstFunction | null;
 }

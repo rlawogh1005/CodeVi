@@ -1,5 +1,5 @@
 import { CommonEntity } from 'src/common/entities/common.entity';
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { AstFile } from './ast-file.entity';
 import { AstClass } from './ast-class.entity';
 
@@ -35,4 +35,17 @@ export class AstFunction extends CommonEntity {
   @ManyToOne(() => AstClass, (cls) => cls.methods, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'classId' })
   ownerClass: AstClass | null;
+
+  @Column({ nullable: true })
+  parentFunctionId: number | null;
+
+  @ManyToOne(() => AstFunction, (fn) => fn.childFunctions, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'parentFunctionId' })
+  parentFunction: AstFunction | null;
+
+  @OneToMany(() => AstFunction, (fn) => fn.parentFunction, { cascade: true })
+  childFunctions: AstFunction[];
+
+  @OneToMany(() => AstClass, (cls) => cls.parentFunction, { cascade: true })
+  childClasses: AstClass[];
 }
