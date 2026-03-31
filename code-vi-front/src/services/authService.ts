@@ -13,7 +13,7 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    await api.post('/api/api/users/logout');
+    await api.post('/api/users/logout');
     localStorage.removeItem('accessToken');
   },
 
