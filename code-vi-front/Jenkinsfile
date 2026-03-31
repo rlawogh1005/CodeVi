@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "code-vi-front"
+        DOCKER_TAG = "latest"
+        PROJECT_DIR = "code-vi-front"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Lint & Build Application') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'npm run lint'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                dir("${PROJECT_DIR}") {
+                    // Update the running container using Docker Compose
+                    sh "docker-compose -f docker-compose.prod.yml up -d --build"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "CI/CD Pipeline finished."
+        }
+    }
+}
