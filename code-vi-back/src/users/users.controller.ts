@@ -10,7 +10,7 @@ import { Roles } from 'src/auth/custom-guards-decorators/roles.decorator';
 import { UserRole } from './entities/user-role.enum';
 
 @UseGuards(AuthGuard(), RolesGuard)
-@Controller('api/users')
+@Controller('users')
 export class UsersController {
     private readonly logger = new Logger(UsersController.name);
 
