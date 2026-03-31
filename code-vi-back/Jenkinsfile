@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "code-vi-back"
+        DOCKER_TAG = "latest"
+        PROJECT_DIR = "code-vi-back"
+        // Add environment variables here or use Jenkins Credentials
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Initial Setup') {
+            steps {
+                // Ensure shared network exists (if not created yet)
+                sh 'docker network ls | grep shared-net || docker network create shared-net'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Lint & Build') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'npm run lint'
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                dir("${PROJECT_DIR}") {
+                    // Update the running container using Docker Compose
+                    // Ensure you have a .env file configured in Jenkins or on the server.
+                    sh "docker-compose -f docker-compose.prod.yml up -d --build"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "CI/CD Pipeline finished."
+        }
+    }
+}
