@@ -1,0 +1,619 @@
+.contact-us-page {
+  background-color: #EDF5FC;
+  overflow-x: hidden;
+}
+
+.contact-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 100px 60px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+}
+
+.contact-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.contact-form-section {
+  display: flex;
+  flex-direction: column;
+  padding-right: 30px;
+}
+
+.contact-image-section {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  margin-right: calc(-60px - max(0px, (100vw - 1400px) / 2));
+  margin-top: -100px;
+  overflow: hidden;
+}
+
+.contact-image-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(to right, #EDF5FC 0%, #EDF5FC 17%, rgba(237, 245, 252, 0) 45%),
+    linear-gradient(to top, #EDF5FC 0%, #EDF5FC 16%, rgba(237, 245, 252, 0) 35%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.contact-illustration {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+  object-position: right top;
+  display: block;
+  transform: scale(0.85);
+  transform-origin: right top;
+}
+
+/* 제목 스타일 */
+.contact-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 0 0 40px 0;
+  line-height: 1.2;
+}
+
+.contact-footer {
+  padding: 40px 0 80px 0;
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 흰색 반원(패널) */
+.footer-white-box {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-right: none;
+  width: calc(50vw + 480px);
+  max-width: 95%;
+  border-radius: 200px 0 0 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 80px 100px 80px 280px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+/* 로고 원 오버레이(반원 위에 걸치는 효과) */
+.footer-logo-overlay {
+  position: absolute;
+  left: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #EDF5FC;
+  border: 1px solid rgba(174, 181, 190, 0.35);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.footer-logo-img-large {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  opacity: 1 !important;
+  filter: contrast(1.5) brightness(0.9) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.footer-content-flex {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-left: 16px;
+  gap: 0;
+}
+
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+
+.footer-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.footer-logo-re {
+  font-family: 'Inter', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  color: #6c7278;
+}
+
+.footer-logo-factory {
+  font-family: 'Inter', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  color: #6c7278;
+}
+
+.footer-logo-ory {
+  color: #8bb2db;
+}
+
+.footer-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #6c7278;
+  margin-top: 4px;
+}
+
+/* 브랜드–Contact Us 사이 세로선 */
+.footer-contact-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 28px;
+  padding-left: 28px;
+  border-left: 1px solid rgba(108, 114, 120, 0.22);
+  margin-right: 40px;
+}
+
+.footer-contact-col h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #6c7278;
+  margin-bottom: 4px;
+}
+
+.footer-contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-contact-details p {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #6c7278;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Contact Us–GitHub 사이 세로선 + GitHub 링크 (Contact Us 크기 맞춤) */
+.footer-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 28px;
+  padding-left: 28px;
+  border-left: 1px solid rgba(108, 114, 120, 0.22);
+  padding-right: 0;
+}
+
+.footer-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #6c7278;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-github-link:hover {
+  color: #8bb2db;
+}
+
+.footer-github-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.footer-social-links {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #6c7278;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-social-link:hover {
+  color: #8bb2db;
+}
+
+.footer-social-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+/* 저작권 → 오른쪽 맨 아래 (예전에 했던 값 그대로) */
+.footer-copyright {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.footer-tagline {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(34, 34, 34, 0.75);
+  max-width: 320px;
+  text-align: left;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+
+.footer-category h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #222222;
+  margin-bottom: 24px;
+}
+
+.footer-contact h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #222222;
+  margin-bottom: 24px;
+}
+
+.footer-category {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.footer-links li {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(34, 34, 34, 0.75);
+}
+
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.footer-contact-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  opacity: 0.5;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.footer-contact-item span {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(34, 34, 34, 0.75);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* GitHub + 저작권 */
+.footer-social {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 180px;
+  padding-left: 28px;
+  border-left: 1px solid rgba(34, 34, 34, 0.12);
+}
+
+.footer-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(34, 34, 34, 0.75);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-github-link:hover {
+  color: #8bb2db;
+}
+
+.footer-github-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.footer-copyright {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(34, 34, 34, 0.45);
+  margin: 0;
+}
+
+.footer-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.footer-logo-img {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  margin-top: -12px;
+}
+
+.footer-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.footer-logo-re {
+  font-family: 'Inter', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: rgba(34, 34, 34, 0.75);
+}
+
+.footer-logo-factory {
+  font-family: 'Inter', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: rgba(34, 34, 34, 0.75);
+}
+
+.footer-logo-ory {
+  color: #8bb2db;
+}
+
+.footer-brand p {
+  margin-top: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(34, 34, 34, 0.75);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* 왼쪽 섹션 */
+.contact-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.contact-left h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 40px;
+  line-height: 1.2;
+}
+
+.contact-info-section {
+  margin-bottom: 60px;
+}
+
+.contact-info-section h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: #666666;
+  margin-bottom: 6px;
+  text-transform: capitalize;
+}
+
+.contact-info-section p {
+  font-family: 'Inter', sans-serif;
+  font-size: 23px;
+  font-weight: 500;
+  color: #222222;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 오른쪽 폼 섹션 */
+.contact-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 0;
+  max-width: 600px;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-family: 'Inter', sans-serif;
+  font-size: 23px;
+  font-weight: 500;
+  color: #222222;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  padding: 16px 16px;
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  color: #222222;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #6b8fc4;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(107, 143, 196, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a0a0a0;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 180px;
+  font-family: 'Inter', sans-serif;
+}
+
+.submit-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #6b8fc4 0%, #5a7fb3 100%);
+  padding: 16px 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #5a7fb3 0%, #4a6fa3 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(107, 143, 196, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0px);
+  box-shadow: 0 3px 10px rgba(107, 143, 196, 0.2);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .contact-container {
+    padding: 60px 30px;
+  }
+
+  .contact-wrapper {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .contact-title {
+    font-size: 48px;
+    margin-bottom: 30px;
+  }
+
+  .footer-inner {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .footer-contact {
+    max-width: 100%;
+  }
+
+  .contact-left h1 {
+    font-size: 40px;
+    margin-bottom: 40px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-info-section {
+    margin-bottom: 30px;
+  }
+}
