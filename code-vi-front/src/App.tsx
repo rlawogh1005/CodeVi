@@ -1,4 +1,22 @@
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
+
+// --- App.jsx Imports ---
+import MainPage from './pages/MainPage';
+import AboutUs from './pages/AboutUs';
+import CodeInsight from './pages/CodeInsight';
+import ZipUpload from './pages/CodeInsight/ZipUpload';
+import GitHubConnect from './pages/CodeInsight/GitHubConnect';
+import Dashboard from './pages/CodeInsight/Dashboard';
+import FAQ from './pages/FAQ';
+import Community from './pages/Community';
+import ContactUs from './pages/ContactUs';
+import Login from './pages/Login';
+import Diagnose from './pages/Diagnose';
+import AuthPanel from './components/AuthPanel/AuthPanel';
+
+// --- App.tsx Imports ---
 import LoginPage from './pages/LoginPage/LoginPage';
 import DashboardPage from './pages/DashboardPage/DashboardPage';
 import VisualizationPage from './pages/VisualizationPage/VisualizationPage';
@@ -12,30 +30,94 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [authStep, setAuthStep] = useState<string>('closed'); // closed | login | signup
+
+  const openLogin = () => {
+    setAuthStep('login');
+  };
+
+  const goSignup = () => {
+    setAuthStep('signup');
+  };
+
+  const goLogin = () => {
+    setAuthStep('login');
+  };
+
+  const closeAuth = () => {
+    setAuthStep('closed');
+  };
+
+  useEffect(() => {
+    if (authStep === 'closed') {
+      document.body.style.overflow = 'auto';
+      return;
+    }
+
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [authStep]);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <DashboardPage />
-            </PrivateRoute>
-          }
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <div className="app-shell">
+        <div
+          className={[
+            'main-wrapper',
+            authStep === 'login' ? 'login-open' : '',
+            authStep === 'signup' ? 'signup-open' : '',
+          ].join(' ')}
+        >
+          <Routes>
+            {/* --- App.jsx Routes --- */}
+            <Route path="/" element={<MainPage onLoginClick={openLogin} />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/code-insight" element={<CodeInsight />} />
+            <Route path="/code-insight/upload" element={<ZipUpload />} />
+            <Route path="/code-insight/github" element={<GitHubConnect />} />
+            <Route path="/code-insight/dashboard" element={<Dashboard />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/diagnose" element={<Diagnose />} />
+            
+            {/* Note: In App.jsx this was path="/login", but App.tsx also has /login. 
+                We keep the older one at /login-old and the newer at /login */}
+            <Route path="/login-old" element={<Login />} />
+
+            {/* --- App.tsx Routes --- */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/visualization/:snapshotId"
+              element={
+                <PrivateRoute>
+                  <VisualizationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+
+        {/* --- App.jsx AuthPanel --- */}
+        <AuthPanel
+          step={authStep}
+          onClose={closeAuth}
+          onGoSignup={goSignup}
+          onGoLogin={goLogin}
         />
-        <Route
-          path="/visualization/:snapshotId"
-          element={
-            <PrivateRoute>
-              <VisualizationPage />
-            </PrivateRoute>
-          }
-        />
-        {/* 기본 진입점 → 대시보드 */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+      </div>
     </BrowserRouter>
   );
 }

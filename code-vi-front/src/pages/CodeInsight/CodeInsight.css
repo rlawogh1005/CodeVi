@@ -1,0 +1,158 @@
+.code-insight-page {
+  min-height: 100vh;
+  background-color: #f5f9fc;
+}
+
+.code-insight-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 110px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.code-insight-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.code-insight-header h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #222222;
+  margin: 0 0 10px 0;
+}
+
+.code-insight-header p {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #666666;
+  margin: 0;
+}
+
+.upload-section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #444444;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.upload-options {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  width: 280px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  border: 1px solid #e8eef3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.upload-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #7492B7;
+}
+
+.upload-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.upload-card h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #222222;
+  margin: 0 0 8px 0;
+}
+
+.upload-card-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #666666;
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.upload-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.upload-features li {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #555555;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-icon {
+  color: #7492B7;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .code-insight-content {
+    padding: 100px 24px 30px;
+  }
+
+  .code-insight-header h1 {
+    font-size: 26px;
+  }
+
+  .upload-options {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .upload-card {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .code-insight-content {
+    padding: 90px 20px 20px;
+  }
+
+  .code-insight-header h1 {
+    font-size: 22px;
+  }
+
+  .code-insight-header p {
+    font-size: 13px;
+  }
+
+  .upload-section-title {
+    font-size: 14px;
+  }
+
+  .upload-card {
+    padding: 22px;
+  }
+}
